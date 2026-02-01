@@ -1,0 +1,43 @@
+name: Fetch ECU Manifests
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    name: Fetch ECU Manifests from ECU Repos
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      # 1️⃣ Checkout baseline repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3️⃣ Install Python dependencies
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install requests
+
+      # 4️⃣ Run ECU manifest fetch script
+      - name: Fetch ECU manifests
+        run: python scripts/fetch_ecu_manifests.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 5️⃣ Upload fetched manifests as artifact (for inspection)
+      - name: Upload fetched ECU manifests
+        uses: actions/upload-artifact@v4
+        with:
+          name: fetched-ecu-manifests
+          path: artifacts/
