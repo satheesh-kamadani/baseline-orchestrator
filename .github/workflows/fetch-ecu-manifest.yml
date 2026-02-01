@@ -31,7 +31,7 @@ jobs:
 
       # 4️⃣ Run ECU manifest fetch script
       - name: Fetch ECU manifests
-        run: python scripts/fetch-ecu-manifests.py
+        run: python scripts/fetch_ecu_manifests.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
