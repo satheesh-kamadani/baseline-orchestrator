@@ -41,6 +41,8 @@ jobs:
           name: fetched-ecu-manifests
           path: artifacts/
 
+      - name: Hold pod for observation
+        run: sleep 300    
 
   assemble-baseline:
     name: Assemble Baseline Manifest
