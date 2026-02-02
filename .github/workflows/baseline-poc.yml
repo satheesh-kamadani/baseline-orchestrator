@@ -70,6 +70,13 @@ jobs:
         run: |
           pip install pyyaml
 
+      # Debug step
+      - name: Debug workspace
+        run: |
+        pwd
+        ls
+        ls scripts | echo "script directory not found"
+
       # 5️⃣ Combine ECU manifests into baseline
       - name: Generate baseline manifest
         run: python scripts/combine_manifests.py
