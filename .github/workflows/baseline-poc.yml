@@ -80,3 +80,36 @@ jobs:
         with:
           name: baseline-manifest
           path: baseline/baseline-manifest.yaml
+
+  sanity-tests:
+    name: Run Baseline Sanity Tests
+    needs: assemble-baseline
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Download baseline manifest
+      - name: Download baseline manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: baseline-manifest
+          path: baseline/
+
+      # 3️⃣ Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 4️⃣ Install dependencies
+      - name: Install Python dependencies
+        run: |
+          pip install pyyaml
+
+      # 5️⃣ Run sanity checks
+      - name: Run sanity checks
+        run: python scripts/sanity_check_baseline.py
+
