@@ -1,0 +1,82 @@
+name: Baseline Orchestration (PoC)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  fetch-ecu-manifests:
+    name: Fetch ECU Manifests
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      actions: read
+
+    steps:
+      # 1️⃣ Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3️⃣ Install dependencies
+      - name: Install Python dependencies
+        run: |
+          pip install requests
+
+      # 4️⃣ Fetch ECU manifests
+      - name: Fetch ECU manifests
+        run: python scripts/fetch_ecu_manifests.py
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # 5️⃣ Upload fetched ECU manifests (ALREADY YOUR NAME)
+      - name: Upload fetched ECU manifests
+        uses: actions/upload-artifact@v4
+        with:
+          name: fetched-ecu-manifests
+          path: artifacts/
+
+
+  assemble-baseline:
+    name: Assemble Baseline Manifest
+    needs: fetch-ecu-manifests
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1️⃣ Checkout repo
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2️⃣ Download ECU manifests from previous job (FIXED)
+      - name: Download fetched ECU manifests
+        uses: actions/download-artifact@v4
+        with:
+          name: fetched-ecu-manifests
+          path: artifacts/
+
+      # 3️⃣ Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 4️⃣ Install dependencies
+      - name: Install Python dependencies
+        run: |
+          pip install pyyaml
+
+      # 5️⃣ Combine ECU manifests into baseline
+      - name: Generate baseline manifest
+        run: python scripts/combine_manifests.py
+
+      # 6️⃣ Upload baseline manifest
+      - name: Upload baseline manifest
+        uses: actions/upload-artifact@v4
+        with:
+          name: baseline-manifest
+          path: baseline/baseline-manifest.yaml
