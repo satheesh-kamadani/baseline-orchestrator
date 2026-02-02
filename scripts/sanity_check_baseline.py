@@ -66,7 +66,7 @@ def main():
         logging.error(f"Sanity checks failed: {exc}")
         sys.exit(1)
 
-    logging.info("Baseline is sane and qualified")
+    logging.info("Baseline is safe and qualified")
 
 
 if __name__ == "__main__":
