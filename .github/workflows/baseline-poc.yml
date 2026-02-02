@@ -73,9 +73,9 @@ jobs:
       # Debug step
       - name: Debug workspace
         run: |
-        pwd
-        ls
-        ls scripts | echo "script directory not found"
+          pwd
+          ls
+          ls scripts | echo "script directory not found"
 
       # 5️⃣ Combine ECU manifests into baseline
       - name: Generate baseline manifest
