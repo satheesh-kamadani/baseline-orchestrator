@@ -6,7 +6,7 @@ on:
 jobs:
   fetch-ecu-manifests:
     name: Fetch ECU Manifests
-    runs-on: ubuntu-latest
+    runs-on: arc-runner-set
 
     permissions:
       contents: read
