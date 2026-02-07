@@ -4,16 +4,32 @@ on:
   workflow_dispatch:
 
 jobs:
-  enqueue-job:
-    name: Enqueue Baseline Jobs to RabbitMQ
-    runs-on: ubuntu-latest
+  fetch-ecu-manifests:
+    name: Fetch ECU Manifests + Enqueue Jobs
+    runs-on: arc-runner-set
+
+    permissions:
+      contents: read
+      actions: read
 
     steps:
-      - name: Install Python dependency
-        run: |
-          pip install pika
+      # 1️⃣ Checkout repository
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - name: Enqueue jobs
+      # 2️⃣ Set up Python
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      # 3️⃣ Install dependencies
+      - name: Install Python dependencies
+        run: |
+          pip install requests pika
+
+      # 4️⃣ Enqueue jobs to RabbitMQ (INSIDE AKS)
+      - name: Enqueue baseline jobs to RabbitMQ
         run: |
           python <<EOF
           import pika
@@ -28,7 +44,6 @@ jobs:
           channel = connection.channel()
           channel.queue_declare(queue="github-jobs", durable=True)
 
-          # Enqueue multiple jobs to simulate load
           for i in range(3):
               channel.basic_publish(
                   exchange="",
@@ -40,33 +55,13 @@ jobs:
           connection.close()
           EOF
 
-  fetch-ecu-manifests:
-    name: Fetch ECU Manifests
-    needs: enqueue-job
-    runs-on: arc-runner-set
-
-    permissions:
-      contents: read
-      actions: read
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install Python dependencies
-        run: |
-          pip install requests
-
+      # 5️⃣ Fetch ECU manifests
       - name: Fetch ECU manifests
         run: python scripts/fetch_ecu_manifests.py
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
+      # 6️⃣ Upload fetched ECU manifests
       - name: Upload fetched ECU manifests
         uses: actions/upload-artifact@v4
         with:
