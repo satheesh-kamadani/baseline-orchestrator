@@ -28,7 +28,7 @@ jobs:
         run: |
           pip install requests pika
 
-      # 4️⃣ Enqueue baseline jobs to RabbitMQ (INSIDE AKS, RETRY SAFE)
+      # 4️⃣ Enqueue baseline jobs to RabbitMQ (INSIDE AKS, DNS SAFE)
       - name: Enqueue baseline jobs to RabbitMQ
         run: |
           python <<EOF
@@ -36,7 +36,8 @@ jobs:
           import time
           import sys
 
-          RABBITMQ_HOST = "rabbitmq"
+          RABBITMQ_HOST = "rabbitmq.messaging.svc.cluster.local"
+          RABBITMQ_PORT = 5672
           USERNAME = "admin"
           PASSWORD = "admin123"
           QUEUE_NAME = "github-jobs"
@@ -46,20 +47,20 @@ jobs:
           connection = None
           for attempt in range(10):
               try:
-                  print(f"[Attempt {attempt+1}] Connecting to RabbitMQ...")
+                  print(f"[Attempt {attempt+1}] Connecting to RabbitMQ at {RABBITMQ_HOST}...")
                   connection = pika.BlockingConnection(
                       pika.ConnectionParameters(
                           host=RABBITMQ_HOST,
-                          port=5672,
+                          port=RABBITMQ_PORT,
                           credentials=credentials,
                           heartbeat=30,
-                          blocked_connection_timeout=30,
+                          blocked_connection_timeout=30
                       )
                   )
                   print("Connected to RabbitMQ")
                   break
               except Exception as e:
-                  print(f"RabbitMQ not ready yet: {e}")
+                  print(f"RabbitMQ not ready or DNS not resolved yet: {e}")
                   time.sleep(5)
 
           if not connection:
