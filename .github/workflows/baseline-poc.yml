@@ -28,31 +28,58 @@ jobs:
         run: |
           pip install requests pika
 
-      # 4️⃣ Enqueue jobs to RabbitMQ (INSIDE AKS)
+      # 4️⃣ Enqueue baseline jobs to RabbitMQ (INSIDE AKS, RETRY SAFE)
       - name: Enqueue baseline jobs to RabbitMQ
         run: |
           python <<EOF
           import pika
+          import time
+          import sys
 
-          connection = pika.BlockingConnection(
-              pika.ConnectionParameters(
-                  host="rabbitmq.messaging.svc.cluster.local",
-                  credentials=pika.PlainCredentials("admin", "admin123")
-              )
-          )
+          RABBITMQ_HOST = "rabbitmq"
+          USERNAME = "admin"
+          PASSWORD = "admin123"
+          QUEUE_NAME = "github-jobs"
+
+          credentials = pika.PlainCredentials(USERNAME, PASSWORD)
+
+          connection = None
+          for attempt in range(10):
+              try:
+                  print(f"[Attempt {attempt+1}] Connecting to RabbitMQ...")
+                  connection = pika.BlockingConnection(
+                      pika.ConnectionParameters(
+                          host=RABBITMQ_HOST,
+                          port=5672,
+                          credentials=credentials,
+                          heartbeat=30,
+                          blocked_connection_timeout=30,
+                      )
+                  )
+                  print("Connected to RabbitMQ")
+                  break
+              except Exception as e:
+                  print(f"RabbitMQ not ready yet: {e}")
+                  time.sleep(5)
+
+          if not connection:
+              print("Failed to connect to RabbitMQ after retries")
+              sys.exit(1)
 
           channel = connection.channel()
-          channel.queue_declare(queue="github-jobs", durable=True)
+          channel.queue_declare(queue=QUEUE_NAME, durable=True)
 
           for i in range(3):
+              msg = f"baseline-job-{i}"
               channel.basic_publish(
                   exchange="",
-                  routing_key="github-jobs",
-                  body=f"baseline-job-{i}"
+                  routing_key=QUEUE_NAME,
+                  body=msg
               )
-              print(f"Enqueued baseline-job-{i}")
+              print(f"Enqueued: {msg}")
 
           connection.close()
+          print("All jobs enqueued successfully")
           EOF
 
       # 5️⃣ Fetch ECU manifests
