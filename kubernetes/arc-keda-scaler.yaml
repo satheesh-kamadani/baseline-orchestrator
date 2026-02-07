@@ -1,0 +1,19 @@
+apiVersion: keda.sh/v1alpha1
+kind: ScaledObject
+metadata:
+  name: arc-runner-queue-scaler
+  namespace: arc-runners
+spec:
+  scaleTargetRef:
+    apiVersion: actions.github.com/v1alpha1
+    kind: AutoscalingRunnerSet
+    name: arc-runner-set
+  minReplicaCount: 0
+  maxReplicaCount: 10
+  triggers:
+  - type: rabbitmq
+    metadata:
+      queueName: github-jobs
+      queueLength: "1"
+    authenticationRef:
+      name: rabbitmq-auth
