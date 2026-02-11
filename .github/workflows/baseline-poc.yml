@@ -6,7 +6,7 @@ on:
 jobs:
   fetch-ecu-manifests:
     name: Fetch ECU Manifests
-    runs-on: arc-runner-set
+    runs-on: ubuntu-latest
 
     permissions:
       contents: read
@@ -47,7 +47,7 @@ jobs:
   assemble-baseline:
     name: Assemble Baseline Manifest
     needs: fetch-ecu-manifests
-    runs-on: arc-runner-set
+    runs-on: ubuntu-latest
 
     steps:
       # 1️⃣ Checkout repo
@@ -86,7 +86,7 @@ jobs:
   sanity-tests:
     name: Run Baseline Sanity Tests
     needs: assemble-baseline
-    runs-on: arc-runner-set
+    runs-on: ubuntu-latest
 
     steps:
       # 1️⃣ Checkout repo
@@ -118,7 +118,7 @@ jobs:
   deploy-mock:
     name: Deploy Baseline to System Rig (Mock)
     needs: sanity-tests
-    runs-on: arc-runner-set
+    runs-on: ubuntu-latest
 
     steps:
       # 1️⃣ Checkout repo
